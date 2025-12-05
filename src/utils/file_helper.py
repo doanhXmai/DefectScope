@@ -53,31 +53,33 @@ class FileHelper:
         cl.info(f"Displaying image: {title}")
 
     @staticmethod
-    def show_images(images: List[np.ndarray], titles: Optional[List[str]] = None, cols: int = 3):
+    def show_images(images: dict[str, np.ndarray], cols: int = 3):
         if not images:
             cl.warn("No images to display.")
             return
 
         n_images = len(images)
-        rows = (n_images // cols) + (1 if n_images % cols > 0 else 0)
+        rows = (n_images // cols) + (1 if n_images % cols != 0 else 0)
 
         plt.figure(figsize=(5 * cols, 5 * rows))
 
-        for i, img in enumerate(images):
+        for idx, (title, img) in enumerate(images.items()):
             if img is None:
                 continue
 
-            plt.subplot(rows, cols, i + 1)
-            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            plt.imshow(img_rgb)
+            plt.subplot(rows, cols, idx + 1)
 
-            if titles and i < len(titles):
-                plt.title(titles[i])
+            # Chuyển sang RGB nếu ảnh có 3 kênh (BGR → RGB)
+            if len(img.shape) == 3 and img.shape[2] == 3:
+                img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             else:
-                plt.title(f"Image {i+1}")
+                img_rgb = img
 
+            plt.imshow(img_rgb, cmap='gray' if len(img.shape) == 2 else None)
+            plt.title(title)
             plt.axis("off")
 
         plt.tight_layout()
         plt.show()
+
         cl.info(f"Displayed {n_images} images in grid")
